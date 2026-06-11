@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String  @id @default(cuid())
+  googleId     String  @unique
+  name         String
+  email        String  @unique
+  profileImage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tests          Test[]
+  participations Participant[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Test {
+  id String @id @default(cuid())
+
+  hostId String
+  host   User   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+
+  accessCode String @unique
+
+  duration Int // in minutes
+
+  status TestStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  settings     TestSetting?
+  questions    Question[]
+  participants Participant[]
+
+  @@index([hostId])
+  @@map("tests")
+}
+
+enum TestStatus {
+  DRAFT
+  PUBLISHED
+  LIVE
+  COMPLETED
+}
+
+model TestSetting {
+  id String @id @default(cuid())
+
+  testId String @unique
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  cameraRequired     Boolean @default(false)
+  fullscreenRequired Boolean @default(false)
+  maxWarnings        Int     @default(3)
+
+  shuffleQuestions Boolean @default(false)
+  shuffleOptions   Boolean @default(false)
+
+  autoSubmitOnWarning Boolean @default(true)
+  showResult          Boolean @default(true)
+
+  // Dynamic participant form
+  participantFields Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("test_settings")
+}
+
+model Question {
+  id String @id @default(cuid())
+
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  questionText String @db.Text
+
+  marks         Int   @default(1)
+  negativeMarks Float @default(0)
+
+  position Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  options Option[]
+  answers ParticipantAnswer[]
+
+  @@index([testId])
+  @@map("questions")
+}
+
+model Option {
+  id String @id @default(cuid())
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  optionText String @db.Text
+
+  isCorrect Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  selectedBy ParticipantAnswer[]
+
+  @@index([questionId])
+  @@map("options")
+}
+
+model Participant {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  // Dynamic details
+  details Json
+
+  warningCount Int @default(0)
+
+  status ParticipantStatus @default(NOT_STARTED)
+
+  startedAt   DateTime?
+  submittedAt DateTime?
+
+  score Float @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  answers  ParticipantAnswer[]
+  warnings WarningLog[]
+
+  @@unique([userId, testId])
+  @@index([testId])
+  @@index([userId])
+  @@map("participants")
+}
+
+enum ParticipantStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+}
+
+model ParticipantAnswer {
+  id String @id @default(cuid())
+
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  selectedOptionId String?
+  selectedOption   Option? @relation(fields: [selectedOptionId], references: [id])
+
+  marksAwarded Float @default(0)
+
+  answeredAt DateTime @default(now())
+
+  @@unique([participantId, questionId])
+  @@index([participantId])
+  @@index([questionId])
+  @@map("participant_answers")
+}
+
+model WarningLog {
+  id String @id @default(cuid())
+
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  warningType WarningType
+
+  createdAt DateTime @default(now())
+
+  @@index([participantId])
+  @@map("warning_logs")
+}
+
+enum WarningType {
+  TAB_SWITCH
+  FULLSCREEN_EXIT
+  COPY
+  PASTE
+}
