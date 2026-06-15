@@ -16,8 +16,6 @@ model User {
   emailVerified DateTime?
   image        String?
 
-  role         UserRole @default(STUDENT)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -29,11 +27,6 @@ model User {
 
   @@index([email])
   @@map("users")
-}
-
-enum UserRole {
-  TEACHER
-  STUDENT
 }
 
 model Account {
@@ -87,6 +80,9 @@ model Test {
 
   status TestStatus @default(DRAFT)
 
+  totalMarks     Int @default(0)
+  totalQuestions Int @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -116,6 +112,10 @@ model TestSetting {
   fullscreenRequired Boolean @default(false)
   maxWarnings        Int     @default(3)
 
+  copyAllowed        Boolean @default(false)
+  pasteAllowed       Boolean @default(false)
+  tabSwitchDetection Boolean @default(true)
+
   shuffleQuestions Boolean @default(false)
   shuffleOptions   Boolean @default(false)
 
@@ -137,12 +137,16 @@ model Question {
   testId String
   test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
 
+  type QuestionType @default(MCQ)
+
   questionText String @db.Text
 
   marks         Int   @default(1)
   negativeMarks Float @default(0)
 
   position Int
+
+  explanation String? @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,7 +156,12 @@ model Question {
   answers ParticipantAnswer[]
 
   @@index([testId])
+  @@unique([testId, position])
   @@map("questions")
+}
+
+enum QuestionType {
+  MCQ
 }
 
 model Option {
@@ -164,6 +173,8 @@ model Option {
   optionText String @db.Text
 
   isCorrect Boolean @default(false)
+
+  position Int
 
   createdAt DateTime @default(now())
 
@@ -211,6 +222,7 @@ enum ParticipantStatus {
   NOT_STARTED
   IN_PROGRESS
   SUBMITTED
+  AUTO_SUBMITTED
 }
 
 model ParticipantAnswer {
