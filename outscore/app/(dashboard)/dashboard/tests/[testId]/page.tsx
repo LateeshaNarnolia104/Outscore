@@ -1,0 +1,74 @@
+import AddQuestionForm from "@/components/question/AddQuestionForm";
+import { getQuestions } from "@/services/question.service";
+import DeleteQuestionButton from "@/components/question/DeleteQuestionButton";
+import EditQuestionButton from "@/components/question/EditQuestionButton";
+import Link from "next/link";
+
+export default async function TestPage({
+  params,
+}: {
+  params: Promise<{
+    testId: string;
+  }>;
+}) {
+  const { testId } = await params;
+
+  const questions = await getQuestions(testId);
+
+  return (
+    
+    <main className="max-w-4xl mx-auto p-8">
+        <Link
+        href="/dashboard"
+        className="inline-flex items-center mb-4 text-sm text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white"
+      >
+        ← Back to Dashboard
+      </Link>
+      
+      <h1 className="text-3xl font-bold mb-6">Add Questions</h1>
+
+      <AddQuestionForm testId={testId} />
+
+      <div className="mt-10 space-y-4">
+        {questions.map((question, index) => (
+          <div key={question.id} className="border rounded-xl p-5">
+            <h2 className="font-bold text-lg">Question {index + 1}</h2>
+            <div className="flex gap-2">
+              <EditQuestionButton
+                question={{
+                  ...question,
+                  testId,
+                }}
+              />
+
+              <DeleteQuestionButton questionId={question.id} testId={testId} />
+            </div>
+
+            <p className="mt-2">{question.questionText}</p>
+
+            <div className="mt-4 space-y-2">
+              {question.options.map((option) => (
+                <div
+                  key={option.id}
+                  className={`p-2 rounded ${
+                    option.isCorrect ? "bg-green-100 dark:bg-green-900" : ""
+                  }`}
+                >
+                  {option.optionText}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 text-sm text-gray-500">
+              <p>Marks: {question.marks}</p>
+
+              {question.negativeMarks > 0 && (
+                <p>Negative Marks: {question.negativeMarks}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}
