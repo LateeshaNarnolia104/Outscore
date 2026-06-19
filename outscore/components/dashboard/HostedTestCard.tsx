@@ -1,4 +1,7 @@
 import { TestStatus } from "@prisma/client";
+import PublishButton from "./PublishButton";
+import CopyCodeButton from "./CopyCodeButton";
+import AddQuestionsButton from "./AddQuestionsButton";
 
 type HostedTestCardProps = {
   test: {
@@ -58,6 +61,28 @@ export default function HostedTestCard({
             {test.totalMarks}
           </p>
         </div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-3 border-t border-neutral-100 dark:border-neutral-800 pt-5">
+
+        <AddQuestionsButton
+          testId={test.id}
+        />
+
+        <CopyCodeButton
+          accessCode={test.accessCode}
+        />
+
+        {test.status === "DRAFT" ? (
+          <PublishButton
+            testId={test.id}
+          />
+        ) : (
+          <span className="rounded-lg bg-green-100 dark:bg-green-900/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-400">
+            ✓ Published
+          </span>
+        )}
+
       </div>
     </div>
   );
