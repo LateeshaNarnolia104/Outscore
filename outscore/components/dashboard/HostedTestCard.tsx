@@ -2,6 +2,7 @@ import { TestStatus } from "@prisma/client";
 import PublishButton from "./PublishButton";
 import CopyCodeButton from "./CopyCodeButton";
 import AddQuestionsButton from "./AddQuestionsButton";
+import Link from "next/link";
 
 type HostedTestCardProps = {
   test: {
@@ -68,6 +69,20 @@ export default function HostedTestCard({
         <AddQuestionsButton
           testId={test.id}
         />
+
+        <Link
+          href={`/dashboard/tests/${test.id}/participant-form`}
+          className="rounded-lg border border-neutral-300 dark:border-neutral-700 px-4 py-2 text-sm font-medium transition hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
+        >
+          Participant Form
+        </Link>
+
+        <Link
+          href={`/dashboard/tests/${test.id}/participants`}
+          className="rounded-lg border border-neutral-300 dark:border-neutral-700 px-4 py-2 text-sm font-medium transition hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
+        >
+          Participants
+        </Link>
 
         <CopyCodeButton
           accessCode={test.accessCode}

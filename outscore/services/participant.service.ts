@@ -20,6 +20,7 @@ export async function findPublishedTestByAccessCode(
       settings: {
         select: {
           showResult: true,
+          participantFields: true,
         },
       },
     },
@@ -44,5 +45,35 @@ export async function findPublishedTestByAccessCode(
     message: "Test found",
     data: test,
   };
+}
+
+export async function getParticipantsByTestId(testId: string, hostId: string) {
+  const test = await prisma.test.findFirst({
+    where: {
+      id: testId,
+      hostId,
+    },
+  });
+
+  if (!test) {
+    throw new Error("Test not found or unauthorized");
+  }
+
+  return prisma.participant.findMany({
+    where: {
+      testId,
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 }
 
