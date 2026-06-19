@@ -72,14 +72,12 @@ export default async function DashboardPage() {
         </div>
       ) : (
         hostedTests.map((test) => (
-          <Link
+          <div
             key={test.id}
-            href={`/dashboard/tests/${test.id}`}
+            className="mb-4 hover:scale-[1.01] transition-all duration-200"
           >
-            <div className="mb-4 hover:scale-[1.01] transition-all duration-200">
-              <HostedTestCard test={test} />
-            </div>
-          </Link>
+            <HostedTestCard test={test} />
+          </div>
         ))
       )}
     </div>

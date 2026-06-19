@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-
+import { prisma } from "@/lib/prisma";
+import { publishTest } from "@/services/test.service";
 import { auth } from "@/auth";
 import { createTest } from "@/services/test.service";
 import { getHostedTests } from "@/services/test.service";
@@ -43,4 +44,29 @@ export async function createTestAction(
   return {
     success: true,
   };
+}
+
+export async function publishTestAction(testId: string) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  await publishTest(testId, session.user.id);
+
+  revalidatePath("/dashboard");
+
+  return {
+    success: true,
+    message: "Test published successfully",
+  };
+}
+
+export async function getTestStatusAction(testId: string) {
+  const test = await prisma.test.findUnique({
+    where: { id: testId },
+    select: { status: true },
+  });
+  return test?.status || null;
 }
