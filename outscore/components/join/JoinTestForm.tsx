@@ -2,8 +2,11 @@
 
 import { FormEvent, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-import { joinTestAction } from "@/app/(dashboard)/actions/participant.action";
+import { joinTestAction, createParticipantAction } from "@/app/(dashboard)/actions/participant.action";
+import ParticipantDynamicForm from "./ParticipantDynamicForm";
+import { ParticipantField } from "@/validators/participant-fields";
 
 type TestPreview = {
   id: string;
@@ -12,11 +15,17 @@ type TestPreview = {
   duration: number;
   totalQuestions: number;
   totalMarks: number;
+  settings?: {
+    showResult: boolean;
+    participantFields: any;
+  } | null;
 };
 
 export default function JoinTestForm() {
+  const router = useRouter();
   const [accessCode, setAccessCode] = useState("");
   const [test, setTest] = useState<TestPreview | null>(null);
+  const [step, setStep] = useState<"CODE" | "PREVIEW" | "FORM">("CODE");
 
   const [isPending, startTransition] = useTransition();
 
@@ -31,8 +40,10 @@ export default function JoinTestForm() {
         return;
       }
 
-      if (response.data) {
-        setTest(response.data);
+      const res = response as { success: true; message: string; data: any };
+      if (res.data) {
+        setTest(res.data);
+        setStep("PREVIEW");
       }
 
       toast.success(response.message);
@@ -40,17 +51,41 @@ export default function JoinTestForm() {
   }
 
   function handleBack() {
-    setTest(null);
-    setAccessCode("");
+    if (step === "FORM") {
+      setStep("PREVIEW");
+    } else {
+      setTest(null);
+      setAccessCode("");
+      setStep("CODE");
+    }
   }
 
   function handleContinue() {
-    toast.info("Participant details form will be implemented next.");
+    setStep("FORM");
+  }
+
+  function handleFormSubmit(details: Record<string, any>) {
+    if (!test) return;
+
+    startTransition(async () => {
+      const response = await createParticipantAction({
+        accessCode,
+        details,
+      });
+
+      if (!response.success) {
+        toast.error(response.message);
+        return;
+      }
+
+      toast.success(response.message || "Registered successfully!");
+      router.push(`/dashboard/tests/${test.id}/waiting`);
+    });
   }
 
   return (
     <div className="w-full">
-      {!test ? (
+      {step === "CODE" && (
         <form
           onSubmit={handleSubmit}
           className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-sm"
@@ -108,12 +143,15 @@ export default function JoinTestForm() {
               disabled:opacity-50
               dark:bg-white
               dark:text-black
+              cursor-pointer
             "
           >
             {isPending ? "Checking..." : "Join Test"}
           </button>
         </form>
-      ) : (
+      )}
+
+      {step === "PREVIEW" && test && (
         <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-sm">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
             {test.title}
@@ -170,6 +208,7 @@ export default function JoinTestForm() {
                 transition
                 hover:bg-neutral-100
                 dark:hover:bg-neutral-800
+                cursor-pointer
               "
             >
               Back
@@ -189,11 +228,56 @@ export default function JoinTestForm() {
                 hover:opacity-90
                 dark:bg-white
                 dark:text-black
+                cursor-pointer
               "
             >
               Continue
             </button>
           </div>
+        </div>
+      )}
+
+      {step === "FORM" && test && (
+        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-sm">
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            Registration
+          </h1>
+
+          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            Please fill in your details to start the assessment.
+          </p>
+
+          <ParticipantDynamicForm
+            fields={
+              Array.isArray(test.settings?.participantFields)
+                ? (test.settings.participantFields as unknown as ParticipantField[])
+                : []
+            }
+            onSubmit={handleFormSubmit}
+            loading={isPending}
+          />
+
+          <button
+            type="button"
+            onClick={handleBack}
+            className="
+              w-full
+              mt-4
+              rounded-xl
+              border
+              border-neutral-300
+              dark:border-neutral-700
+              py-3
+              font-medium
+              text-sm
+              transition
+              hover:bg-neutral-100
+              dark:hover:bg-neutral-800
+              cursor-pointer
+            "
+          >
+            Back
+          </button>
         </div>
       )}
     </div>

@@ -131,3 +131,15 @@ export async function publishTest(
     },
   });
 }
+
+export async function getTestForHost(testId: string, hostId: string) {
+  return prisma.test.findFirst({
+    where: {
+      id: testId,
+      hostId,
+    },
+    include: {
+      settings: true,
+    },
+  });
+}
