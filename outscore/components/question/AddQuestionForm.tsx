@@ -59,15 +59,20 @@ export default function AddQuestionForm({ testId }: { testId: string }) {
       <select
         value={correct}
         onChange={(e) => setCorrect(Number(e.target.value))}
-        className="border p-2 rounded"
+        className="border border-neutral-700 bg-neutral-900 text-white p-2 rounded-xl"
       >
-        <option value={0}>Option 1 Correct</option>
-
-        <option value={1}>Option 2 Correct</option>
-
-        <option value={2}>Option 3 Correct</option>
-
-        <option value={3}>Option 4 Correct</option>
+        <option value={0} className="bg-neutral-900 text-white">
+          Option 1 Correct
+        </option>
+        <option value={1} className="bg-neutral-900 text-white">
+          Option 2 Correct
+        </option>
+        <option value={2} className="bg-neutral-900 text-white">
+          Option 3 Correct
+        </option>
+        <option value={3} className="bg-neutral-900 text-white">
+          Option 4 Correct
+        </option>
       </select>
 
       <div className="grid grid-cols-2 gap-4">
