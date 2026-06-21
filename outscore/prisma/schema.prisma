@@ -86,6 +86,10 @@ model Test {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  startedAt DateTime?
+  endsAt DateTime?
+  endedAt DateTime?
+
   // Relations
   settings     TestSetting?
   questions    Question[]

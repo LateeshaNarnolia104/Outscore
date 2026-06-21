@@ -1,11 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { generateAccessCode } from "@/lib/access-code";
 import { CreateTestInput } from "@/validators/test";
+import { TestStatus } from "@prisma/client";
 
-export async function createTest(
-  hostId: string,
-  data: CreateTestInput
-) {
+export async function createTest(hostId: string, data: CreateTestInput) {
   let accessCode = generateAccessCode();
 
   let existingTest = await prisma.test.findUnique({
@@ -52,8 +50,6 @@ export async function createTest(
   return test;
 }
 
-
-
 export async function getHostedTests(hostId: string) {
   const tests = await prisma.test.findMany({
     where: {
@@ -88,10 +84,7 @@ export async function getHostedTests(hostId: string) {
   return tests;
 }
 
-export async function publishTest(
-  testId: string,
-  hostId: string
-) {
+export async function publishTest(testId: string, hostId: string) {
   const test = await prisma.test.findFirst({
     where: {
       id: testId,
@@ -142,4 +135,78 @@ export async function getTestForHost(testId: string, hostId: string) {
       settings: true,
     },
   });
+}
+
+export async function startTest(testId: string, hostId: string) {
+  const test = await prisma.test.findFirst({
+    where: {
+      id: testId,
+      hostId,
+    },
+  });
+
+  if (!test) {
+    throw new Error("Test not found");
+  }
+
+  if (test.status !== "PUBLISHED") {
+    throw new Error("Only published tests can be started");
+  }
+
+  const startedAt = new Date();
+
+  const endsAt = new Date(startedAt.getTime() + test.duration * 60 * 1000);
+
+  return prisma.test.update({
+    where: {
+      id: testId,
+    },
+    data: {
+      status: "LIVE",
+      startedAt,
+      endsAt,
+    },
+  });
+}
+
+
+export async function ensureTestCompletion(
+  testId: string
+) {
+  const test = await prisma.test.findUnique({
+    where: {
+      id: testId,
+    },
+
+    select: {
+      id: true,
+      status: true,
+      endsAt: true,
+    },
+  });
+
+  if (!test) {
+    throw new Error("Test not found");
+  }
+
+  if (
+    test.status === TestStatus.LIVE &&
+    test.endsAt &&
+    test.endsAt <= new Date()
+  ) {
+    await prisma.test.update({
+      where: {
+        id: test.id,
+      },
+
+      data: {
+        status: TestStatus.COMPLETED,
+        endedAt: new Date(),
+      },
+    });
+
+    return TestStatus.COMPLETED;
+  }
+
+  return test.status;
 }

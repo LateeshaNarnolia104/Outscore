@@ -6,10 +6,8 @@ import { publishTest } from "@/services/test.service";
 import { auth } from "@/auth";
 import { createTest } from "@/services/test.service";
 import { getHostedTests } from "@/services/test.service";
-import {
-  createTestSchema,
-  CreateTestInput,
-} from "@/validators/test";
+import { startTest } from "@/services/test.service";
+import { createTestSchema, CreateTestInput } from "@/validators/test";
 
 export async function getHostedTestsAction() {
   const session = await auth();
@@ -23,9 +21,7 @@ export async function getHostedTestsAction() {
   return tests;
 }
 
-export async function createTestAction(
-  data: CreateTestInput
-) {
+export async function createTestAction(data: CreateTestInput) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -34,10 +30,7 @@ export async function createTestAction(
 
   const validatedData = createTestSchema.parse(data);
 
-  await createTest(
-    session.user.id,
-    validatedData
-  );
+  await createTest(session.user.id, validatedData);
 
   revalidatePath("/dashboard");
 
@@ -60,6 +53,23 @@ export async function publishTestAction(testId: string) {
   return {
     success: true,
     message: "Test published successfully",
+  };
+}
+
+export async function startTestAction(testId: string) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  await startTest(testId, session.user.id);
+
+  revalidatePath("/dashboard");
+
+  return {
+    success: true,
+    message: "Test started successfully",
   };
 }
 

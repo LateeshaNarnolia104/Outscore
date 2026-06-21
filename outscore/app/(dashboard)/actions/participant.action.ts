@@ -6,9 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { ParticipantField } from "@/validators/participant-fields";
 
-export async function joinTestAction(
-  accessCode: string
-) {
+export async function joinTestAction(accessCode: string) {
   const validatedData = joinTestSchema.safeParse({
     accessCode,
   });
@@ -16,15 +14,11 @@ export async function joinTestAction(
   if (!validatedData.success) {
     return {
       success: false,
-      message:
-        validatedData.error.issues[0]?.message ??
-        "Invalid access code",
+      message: validatedData.error.issues[0]?.message ?? "Invalid access code",
     };
   }
 
-  return findPublishedTestByAccessCode(
-    validatedData.data.accessCode
-  );
+  return findPublishedTestByAccessCode(validatedData.data.accessCode);
 }
 
 export async function createParticipantAction(input: {
@@ -40,11 +34,14 @@ export async function createParticipantAction(input: {
   }
   const userId = session.user.id;
 
-  const parsedAccessCode = joinTestSchema.safeParse({ accessCode: input.accessCode });
+  const parsedAccessCode = joinTestSchema.safeParse({
+    accessCode: input.accessCode,
+  });
   if (!parsedAccessCode.success) {
     return {
       success: false,
-      message: parsedAccessCode.error.issues[0]?.message ?? "Invalid access code",
+      message:
+        parsedAccessCode.error.issues[0]?.message ?? "Invalid access code",
     };
   }
 
@@ -74,7 +71,9 @@ export async function createParticipantAction(input: {
   }
 
   const participantFieldsJson = test.settings?.participantFields;
-  const participantFields: ParticipantField[] = Array.isArray(participantFieldsJson)
+  const participantFields: ParticipantField[] = Array.isArray(
+    participantFieldsJson,
+  )
     ? (participantFieldsJson as unknown as ParticipantField[])
     : [];
 
@@ -85,7 +84,11 @@ export async function createParticipantAction(input: {
     const value = input.details[field.id];
 
     if (field.required) {
-      if (value === undefined || value === null || String(value).trim() === "") {
+      if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+      ) {
         detailsErrors.push(`${field.label} is required.`);
         continue;
       }
@@ -93,7 +96,7 @@ export async function createParticipantAction(input: {
 
     if (value !== undefined && value !== null && String(value).trim() !== "") {
       const trimmedValue = String(value).trim();
-      
+
       if (field.type === "email") {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(trimmedValue)) {
@@ -162,4 +165,126 @@ export async function createParticipantAction(input: {
       message: "An error occurred while registering for the test.",
     };
   }
+}
+
+export async function submitTestAction(testId: string) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const participant = await prisma.participant.findUnique({
+    where: {
+      userId_testId: {
+        userId: session.user.id,
+        testId,
+      },
+    },
+
+    include: {
+      answers: {
+        include: {
+          question: {
+            include: {
+              options: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!participant) {
+    throw new Error("Participant not found");
+  }
+
+  if (
+    participant.status === "SUBMITTED" ||
+    participant.status === "AUTO_SUBMITTED"
+  ) {
+    throw new Error("Already submitted");
+  }
+
+  let score = 0;
+
+  for (const answer of participant.answers) {
+    const correctOption = answer.question.options.find(
+      (option) => option.isCorrect,
+    );
+
+    if (!correctOption) continue;
+
+    if (answer.selectedOptionId === correctOption.id) {
+      score += answer.question.marks;
+    } else if (answer.selectedOptionId) {
+      score -= answer.question.negativeMarks;
+    }
+  }
+
+  await prisma.participant.update({
+    where: {
+      id: participant.id,
+    },
+
+    data: {
+      score,
+      status: "SUBMITTED",
+      submittedAt: new Date(),
+    },
+  });
+
+  return {
+    success: true,
+    score,
+  };
+}
+
+export async function saveAnswerAction(
+  questionId: string,
+  optionId: string,
+  testId: string,
+) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const participant = await prisma.participant.findUnique({
+    where: {
+      userId_testId: {
+        userId: session.user.id,
+        testId,
+      },
+    },
+  });
+
+  if (!participant) {
+    throw new Error("Participant not found");
+  }
+
+  await prisma.participantAnswer.upsert({
+    where: {
+      participantId_questionId: {
+        participantId: participant.id,
+        questionId,
+      },
+    },
+
+    update: {
+      selectedOptionId: optionId,
+      answeredAt: new Date(),
+    },
+
+    create: {
+      participantId: participant.id,
+      questionId,
+      selectedOptionId: optionId,
+    },
+  });
+
+  return {
+    success: true,
+  };
 }
