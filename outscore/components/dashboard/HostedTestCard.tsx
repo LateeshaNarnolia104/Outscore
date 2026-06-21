@@ -3,6 +3,7 @@ import PublishButton from "./PublishButton";
 import CopyCodeButton from "./CopyCodeButton";
 import AddQuestionsButton from "./AddQuestionsButton";
 import Link from "next/link";
+import StartTestButton from "./StartTestButton";
 
 type HostedTestCardProps = {
   test: {
@@ -17,9 +18,7 @@ type HostedTestCardProps = {
   };
 };
 
-export default function HostedTestCard({
-  test,
-}: HostedTestCardProps) {
+export default function HostedTestCard({ test }: HostedTestCardProps) {
   return (
     <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-sm transition-all duration-200 hover:shadow-md">
       <div className="flex items-center justify-between">
@@ -38,26 +37,36 @@ export default function HostedTestCard({
 
       <div className="mt-6 pt-5 border-t border-neutral-100 dark:border-neutral-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
         <div>
-          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">Access Code</p>
-          <p className="font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">{test.accessCode}</p>
+          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">
+            Access Code
+          </p>
+          <p className="font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">
+            {test.accessCode}
+          </p>
         </div>
 
         <div>
-          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">Duration</p>
+          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">
+            Duration
+          </p>
           <p className="font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">
             {test.duration} mins
           </p>
         </div>
 
         <div>
-          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">Questions</p>
+          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">
+            Questions
+          </p>
           <p className="font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">
             {test.totalQuestions}
           </p>
         </div>
 
         <div>
-          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">Marks</p>
+          <p className="text-neutral-400 dark:text-neutral-500 text-xs uppercase font-medium">
+            Marks
+          </p>
           <p className="font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">
             {test.totalMarks}
           </p>
@@ -65,10 +74,7 @@ export default function HostedTestCard({
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3 border-t border-neutral-100 dark:border-neutral-800 pt-5">
-
-        <AddQuestionsButton
-          testId={test.id}
-        />
+        <AddQuestionsButton testId={test.id} />
 
         <Link
           href={`/dashboard/tests/${test.id}/participant-form`}
@@ -84,22 +90,24 @@ export default function HostedTestCard({
           Participants
         </Link>
 
-        <CopyCodeButton
-          accessCode={test.accessCode}
-        />
+        <CopyCodeButton accessCode={test.accessCode} />
 
-        {test.status === "DRAFT" ? (
-          <PublishButton
-            testId={test.id}
-          />
-        ) : (
-          <span className="rounded-lg bg-green-100 dark:bg-green-900/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-400">
-            ✓ Published
+        {test.status === "DRAFT" && <PublishButton testId={test.id} />}
+
+        {test.status === "PUBLISHED" && <StartTestButton testId={test.id} />}
+
+        {test.status === "LIVE" && (
+          <span className="rounded-lg bg-blue-100 dark:bg-blue-900/30 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+            ● Live
           </span>
         )}
 
+        {test.status === "COMPLETED" && (
+          <span className="rounded-lg bg-purple-100 dark:bg-purple-900/30 px-4 py-2 text-sm font-medium text-purple-700 dark:text-purple-400">
+            Results Available
+          </span>
+        )}
       </div>
     </div>
   );
 }
-

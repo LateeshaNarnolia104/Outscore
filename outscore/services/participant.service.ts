@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export async function findPublishedTestByAccessCode(
-  accessCode: string
-) {
+export async function findPublishedTestByAccessCode(accessCode: string) {
   const test = await prisma.test.findUnique({
     where: {
       accessCode,
@@ -77,3 +75,45 @@ export async function getParticipantsByTestId(testId: string, hostId: string) {
   });
 }
 
+export async function getAttemptTest(testId: string, userId: string) {
+  const participant = await prisma.participant.findUnique({
+    where: {
+      userId_testId: {
+        userId,
+        testId,
+      },
+    },
+
+    include: {
+      test: {
+        include: {
+          questions: {
+            orderBy: {
+              position: "asc",
+            },
+
+            include: {
+              options: {
+                orderBy: {
+                  position: "asc",
+                },
+              },
+            },
+          },
+        },
+      },
+
+      answers: true,
+    },
+  });
+
+  if (!participant) {
+    throw new Error("Participant not found");
+  }
+
+  if (participant.test.status !== "LIVE") {
+    throw new Error("Test is not live");
+  }
+
+  return participant;
+}
