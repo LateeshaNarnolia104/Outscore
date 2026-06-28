@@ -1,3 +1,5 @@
+import { getParticipantRankAction } from "@/app/(dashboard)/actions/leaderboard.action";
+
 export default function SubmittedPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">

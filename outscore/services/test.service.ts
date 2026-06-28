@@ -191,8 +191,7 @@ export async function ensureTestCompletion(
 
   if (
     test.status === TestStatus.LIVE &&
-    test.endsAt &&
-    test.endsAt <= new Date()
+    test.endsAt && new Date(test.endsAt).getTime() <= Date.now()
   ) {
     await prisma.test.update({
       where: {

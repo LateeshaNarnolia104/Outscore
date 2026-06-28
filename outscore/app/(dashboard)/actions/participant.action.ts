@@ -1,7 +1,11 @@
 "use server";
 
 import { joinTestSchema } from "@/validators/participant";
-import { findPublishedTestByAccessCode } from "@/services/participant.service";
+import {
+  findPublishedTestByAccessCode,
+  getJoinedTests,
+  getParticipantResult,
+} from "@/services/participant.service";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { ParticipantField } from "@/validators/participant-fields";
@@ -206,21 +210,39 @@ export async function submitTestAction(testId: string) {
     throw new Error("Already submitted");
   }
 
-  let score = 0;
 
-  for (const answer of participant.answers) {
-    const correctOption = answer.question.options.find(
-      (option) => option.isCorrect,
-    );
+let score = 0;
 
-    if (!correctOption) continue;
+for (const answer of participant.answers) {
 
-    if (answer.selectedOptionId === correctOption.id) {
-      score += answer.question.marks;
-    } else if (answer.selectedOptionId) {
-      score -= answer.question.negativeMarks;
-    }
+  const correctOption = answer.question.options.find(
+    (option) => option.isCorrect
+  );
+
+  if (!correctOption) continue;
+
+  let marksAwarded = 0;
+
+  if (answer.selectedOptionId === correctOption.id) {
+    marksAwarded = answer.question.marks;
+  } else if (answer.selectedOptionId) {
+    marksAwarded = -answer.question.negativeMarks;
   }
+
+  score += marksAwarded;
+
+  await prisma.participantAnswer.update({
+    where: {
+      participantId_questionId: {
+        participantId: participant.id,
+        questionId: answer.question.id,
+      },
+    },
+    data: {
+      marksAwarded,
+    },
+  });
+}
 
   await prisma.participant.update({
     where: {
@@ -287,4 +309,24 @@ export async function saveAnswerAction(
   return {
     success: true,
   };
+}
+
+export async function getJoinedTestsAction() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  return await getJoinedTests(session.user.id);
+}
+
+export async function getParticipantResultAction(testId: string) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  return getParticipantResult(testId, session.user.id);
 }
