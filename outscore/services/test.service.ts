@@ -51,6 +51,23 @@ export async function createTest(hostId: string, data: CreateTestInput) {
 }
 
 export async function getHostedTests(hostId: string) {
+  // First fetch only LIVE tests
+  const liveTests = await prisma.test.findMany({
+    where: {
+      hostId,
+      status: TestStatus.LIVE,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  // Auto-complete expired LIVE tests
+  for (const test of liveTests) {
+    await ensureTestCompletion(test.id);
+  }
+
+  // Fetch fresh data after status updates
   const tests = await prisma.test.findMany({
     where: {
       hostId,
@@ -65,7 +82,11 @@ export async function getHostedTests(hostId: string) {
       status: true,
       totalMarks: true,
       totalQuestions: true,
+
       createdAt: true,
+      startedAt: true,
+      endsAt: true,
+      endedAt: true,
 
       settings: {
         select: {
@@ -165,6 +186,36 @@ export async function startTest(testId: string, hostId: string) {
       status: "LIVE",
       startedAt,
       endsAt,
+    },
+  });
+}
+
+export async function endTest(
+  testId: string,
+  hostId: string
+) {
+  const test = await prisma.test.findFirst({
+    where: {
+      id: testId,
+      hostId,
+    },
+  });
+
+  if (!test) {
+    throw new Error("Test not found");
+  }
+
+  if (test.status !== TestStatus.LIVE) {
+    throw new Error("Only live tests can be ended");
+  }
+
+  return prisma.test.update({
+    where: {
+      id: testId,
+    },
+    data: {
+      status: TestStatus.COMPLETED,
+      endedAt: new Date(),
     },
   });
 }

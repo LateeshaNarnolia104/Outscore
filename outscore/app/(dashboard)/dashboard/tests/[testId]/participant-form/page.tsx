@@ -30,6 +30,8 @@ export default async function ParticipantFormPage({
     );
   }
 
+  const isEditable = test.status === "DRAFT";
+
   // Parse existing fields
   const initialFields = Array.isArray(test.settings?.participantFields)
     ? (test.settings.participantFields as unknown as ParticipantField[])
@@ -49,15 +51,25 @@ export default async function ParticipantFormPage({
           Configure Registration Form
         </h1>
         <p className="text-neutral-500 mt-2">
-          Design the form that participants must fill out before starting the test: <strong>{test.title}</strong>
+          Design the form that participants must fill out before starting the
+          test: <strong>{test.title}</strong>
         </p>
       </div>
 
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-8 shadow-sm">
-        <ParticipantFieldBuilder
-          testId={testId}
-          initialFields={initialFields}
-        />
+        {!isEditable && (
+          <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-600 dark:text-amber-400">
+            🔒 The participant registration form is locked because this test has
+            already been published.
+          </div>
+        )}
+
+        {isEditable && (
+          <ParticipantFieldBuilder
+            testId={testId}
+            initialFields={initialFields}
+          />
+        )}
       </div>
     </main>
   );

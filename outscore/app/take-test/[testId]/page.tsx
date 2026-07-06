@@ -4,6 +4,7 @@ import { getAttemptTest } from "@/services/participant.service";
 import AttemptTest from "@/components/test/AttemptTest";
 import TestTimer from "@/components/test/TestTimer";
 import SubmitTestButton from "@/components/test/SubmitTestButton";
+import Proctoring from "@/components/test/Proctoring";
 
 type TakeTestPageProps = {
   params: Promise<{
@@ -22,6 +23,13 @@ export default async function TakeTestPage({ params }: TakeTestPageProps) {
 
   const participant = await getAttemptTest(testId, session.user.id);
 
+  if (
+    participant.status === "SUBMITTED" ||
+    participant.status === "AUTO_SUBMITTED"
+  ) {
+    redirect(`/take-test/${testId}/submitted`);
+  }
+
   const initialAnswers: Record<string, string> = Object.fromEntries(
     participant.answers
       .filter((answer) => answer.selectedOptionId !== null)
@@ -38,6 +46,7 @@ export default async function TakeTestPage({ params }: TakeTestPageProps) {
 
       <div className="mt-6">
         <TestTimer endsAt={participant.test.endsAt!} testId={testId} />
+        <Proctoring testId={testId} />
       </div>
 
       <div className="mt-4">

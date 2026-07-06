@@ -4,6 +4,7 @@ import CopyCodeButton from "./CopyCodeButton";
 import AddQuestionsButton from "./AddQuestionsButton";
 import Link from "next/link";
 import StartTestButton from "./StartTestButton";
+import EndTestButton from "./EndTestButton";
 
 type HostedTestCardProps = {
   test: {
@@ -97,9 +98,13 @@ export default function HostedTestCard({ test }: HostedTestCardProps) {
         {test.status === "PUBLISHED" && <StartTestButton testId={test.id} />}
 
         {test.status === "LIVE" && (
-          <span className="rounded-lg bg-blue-100 dark:bg-blue-900/30 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-400">
-            ● Live
-          </span>
+          <>
+            <span className="rounded-lg bg-blue-100 dark:bg-blue-900/30 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-400">
+              ● Live
+            </span>
+
+            <EndTestButton testId={test.id} />
+          </>
         )}
 
         {test.status === "COMPLETED" && (

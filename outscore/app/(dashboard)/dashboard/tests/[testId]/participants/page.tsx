@@ -165,14 +165,34 @@ export default async function ParticipantsPage({
                         {participant.status.replace("_", " ")}
                       </span>
                     </td>
-                    <td className="py-4 px-6  text-neutral-950 dark:text-white">
+                    <td className="py-4 px-6 font-semibold">
                       {participant.status === "SUBMITTED" ||
                       participant.status === "AUTO_SUBMITTED"
-                        ? `${(
-                            (participant.score / test.totalMarks) *
-                            100
-                          ).toFixed(1)}%`
+                        ? `${participant.score}/${test.totalMarks}`
                         : "-"}
+                    </td>
+                    <td className="py-4 px-6 text-neutral-950 dark:text-white">
+                      {(() => {
+                        if (
+                          participant.status !== "SUBMITTED" &&
+                          participant.status !== "AUTO_SUBMITTED"
+                        ) {
+                          return "-";
+                        }
+
+                        const attempted = participant.answers.filter(
+                          (answer) => answer.selectedOptionId !== null,
+                        ).length;
+
+                        const correct = participant.answers.filter(
+                          (answer) => answer.selectedOption?.isCorrect,
+                        ).length;
+
+                        const accuracy =
+                          attempted === 0 ? 0 : (correct / attempted) * 100;
+
+                        return `${accuracy.toFixed(1)}%`;
+                      })()}
                     </td>
                     <td className="py-4 px-6 text-neutral-500 dark:text-neutral-400 font-mono text-xs">
                       {new Date(participant.createdAt).toLocaleString()}

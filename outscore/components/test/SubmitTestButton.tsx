@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { submitTestAction } from "@/app/(dashboard)/actions/participant.action";
+import { submitTestAction } from "@/app/(dashboard)/actions/attempt.action";
 
 type SubmitTestButtonProps = {
   testId: string;
