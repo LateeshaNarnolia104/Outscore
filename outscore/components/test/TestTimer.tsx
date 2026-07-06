@@ -3,16 +3,14 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { submitTestAction } from "@/app/(dashboard)/actions/attempt.action";
+import { getTestStatusAction } from "@/app/(dashboard)/actions/test.action";
 
 type TestTimerProps = {
   endsAt: Date | string;
   testId: string;
 };
 
-export default function TestTimer({
-  endsAt,
-  testId,
-}: TestTimerProps) {
+export default function TestTimer({ endsAt, testId }: TestTimerProps) {
   const router = useRouter();
 
   const [remaining, setRemaining] = useState(0);
@@ -20,31 +18,33 @@ export default function TestTimer({
   const submittedRef = useRef(false);
 
   useEffect(() => {
+    async function autoSubmit() {
+      if (submittedRef.current) return;
+
+      submittedRef.current = true;
+
+      try {
+        await submitTestAction(testId, true);
+        router.replace(`/take-test/${testId}/submitted`);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     async function updateTimer() {
-      const diff =
-        new Date(endsAt).getTime() -
-        Date.now();
+      const status = await getTestStatusAction(testId);
 
-      if (
-        diff <= 0 &&
-        !submittedRef.current
-      ) {
-        submittedRef.current = true;
+      if (status === "COMPLETED") {
+        await autoSubmit();
+        return;
+      }
 
-        try {
-          await submitTestAction(
-            testId,
-            true
-          );
+      const diff = new Date(endsAt).getTime() - Date.now();
 
-          router.replace(
-            `/take-test/${testId}/submitted`
-          );
-        } catch (error) {
-          console.error(error);
-        }
-
+      if (diff <= 0) {
         setRemaining(0);
+
+        await autoSubmit();
         return;
       }
 
@@ -53,28 +53,18 @@ export default function TestTimer({
 
     updateTimer();
 
-    const interval = setInterval(
-      updateTimer,
-      1000
-    );
+    const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
   }, [endsAt, testId, router]);
 
-  const totalSeconds = Math.floor(
-    remaining / 1000
-  );
+  const totalSeconds = Math.floor(remaining / 1000);
 
-  const hours = Math.floor(
-    totalSeconds / 3600
-  );
+  const hours = Math.floor(totalSeconds / 3600);
 
-  const minutes = Math.floor(
-    (totalSeconds % 3600) / 60
-  );
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
 
-  const seconds =
-    totalSeconds % 60;
+  const seconds = totalSeconds % 60;
 
   return (
     <div className="rounded-xl border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30 px-4 py-3">
@@ -83,8 +73,7 @@ export default function TestTimer({
       </p>
 
       <p className="text-2xl font-bold text-red-600">
-        {String(hours).padStart(2, "0")}:
-        {String(minutes).padStart(2, "0")}:
+        {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:
         {String(seconds).padStart(2, "0")}
       </p>
     </div>

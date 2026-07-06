@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ensureTestCompletion } from "./test.service";
 
 export async function findPublishedTestByAccessCode(accessCode: string) {
   const test = await prisma.test.findUnique({
@@ -31,7 +32,9 @@ export async function findPublishedTestByAccessCode(accessCode: string) {
     };
   }
 
-  if (test.status !== "PUBLISHED") {
+  const currentStatus = await ensureTestCompletion(test.id);
+
+  if (currentStatus !== "PUBLISHED" && currentStatus !== "LIVE") {
     return {
       success: false,
       message: "This test is not available to join",
@@ -41,7 +44,10 @@ export async function findPublishedTestByAccessCode(accessCode: string) {
   return {
     success: true,
     message: "Test found",
-    data: test,
+    data: {
+      ...test,
+      status: currentStatus,
+    },
   };
 }
 
@@ -58,60 +64,64 @@ export async function getParticipantsByTestId(testId: string, hostId: string) {
   }
 
   const participants = await prisma.participant.findMany({
-  where: {
-    testId,
-  },
+    where: {
+      testId,
+    },
 
-  include: {
-    user: {
-      select: {
-        name: true,
-        email: true,
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+
+      answers: {
+        include: {
+          selectedOption: {
+            select: {
+              isCorrect: true,
+            },
+          },
+        },
       },
     },
 
-    answers: true,
-  },
+    orderBy: [
+      {
+        score: "desc",
+      },
+      {
+        createdAt: "asc",
+      },
+    ],
+  });
 
-  orderBy: [
-    {
-      score: "desc",
+  const submitted = participants.filter(
+    (p) => p.status === "SUBMITTED" || p.status === "AUTO_SUBMITTED",
+  );
+
+  const highestScore =
+    participants.length > 0 ? Math.max(...participants.map((p) => p.score)) : 0;
+
+  const averageScore =
+    participants.length > 0
+      ? participants.reduce((sum, p) => sum + p.score, 0) / participants.length
+      : 0;
+
+  return {
+    participants,
+    stats: {
+      totalParticipants: participants.length,
+      submittedCount: submitted.length,
+      highestScore,
+      averageScore,
     },
-    {
-      createdAt: "asc",
-    },
-  ],
-});
-
-const submitted = participants.filter(
-  (p) =>
-    p.status === "SUBMITTED" ||
-    p.status === "AUTO_SUBMITTED"
-);
-
-const highestScore =
-  participants.length > 0
-    ? Math.max(...participants.map((p) => p.score))
-    : 0;
-
-const averageScore =
-  participants.length > 0
-    ? participants.reduce((sum, p) => sum + p.score, 0) /
-      participants.length
-    : 0;
-
-return {
-  participants,
-  stats: {
-    totalParticipants: participants.length,
-    submittedCount: submitted.length,
-    highestScore,
-    averageScore,
-  },
-};
+  };
 }
 
 export async function getAttemptTest(testId: string, userId: string) {
+  await ensureTestCompletion(testId);
   const participant = await prisma.participant.findUnique({
     where: {
       userId_testId: {
@@ -203,19 +213,16 @@ export async function getJoinedTests(userId: string) {
     },
 
     orderBy: [
-  {
-    score: "desc",
-  },
-  {
-    submittedAt: "asc",
-  },
-],
+      {
+        score: "desc",
+      },
+      {
+        submittedAt: "asc",
+      },
+    ],
   });
 }
-export async function getParticipantResult(
-  testId: string,
-  userId: string
-) {
+export async function getParticipantResult(testId: string, userId: string) {
   const participant = await prisma.participant.findUnique({
     where: {
       userId_testId: {
