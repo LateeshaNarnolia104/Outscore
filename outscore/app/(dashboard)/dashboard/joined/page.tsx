@@ -112,17 +112,39 @@ export default async function JoinedTestsPage() {
 
               </div>
 
-              {(participant.status === "SUBMITTED" ||
-                participant.status === "AUTO_SUBMITTED") && (
-                <div className="mt-6">
+              <div className="mt-6 flex flex-wrap gap-3">
+                {(participant.status === "SUBMITTED" ||
+                  participant.status === "AUTO_SUBMITTED") && (
                   <Link
                     href={`/dashboard/joined/${participant.test.id}`}
-                    className="bg-black text-white px-4 py-2 rounded-lg"
+                    className="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg text-sm font-medium transition hover:opacity-90"
                   >
                     View Result →
                   </Link>
-                </div>
-              )}
+                )}
+
+                {participant.status !== "SUBMITTED" &&
+                  participant.status !== "AUTO_SUBMITTED" &&
+                  participant.test.status === "LIVE" && (
+                    <Link
+                      href={`/take-test/${participant.test.id}`}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition hover:bg-green-700"
+                    >
+                      Resume Assessment →
+                    </Link>
+                  )}
+
+                {participant.status !== "SUBMITTED" &&
+                  participant.status !== "AUTO_SUBMITTED" &&
+                  participant.test.status === "PUBLISHED" && (
+                    <Link
+                      href={`/dashboard/tests/${participant.test.id}/waiting`}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition hover:bg-blue-700 animate-pulse"
+                    >
+                      Go to Waiting Lobby →
+                    </Link>
+                  )}
+              </div>
             </div>
           ))}
         </div>
