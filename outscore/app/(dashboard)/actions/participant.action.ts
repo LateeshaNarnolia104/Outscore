@@ -9,6 +9,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { ParticipantField } from "@/validators/participant-fields";
+import { ensureTestCompletion } from "@/services/test.service";
 
 export async function joinTestAction(accessCode: string) {
   const validatedData = joinTestSchema.safeParse({
@@ -67,7 +68,9 @@ export async function createParticipantAction(input: {
     };
   }
 
-  if (test.status !== "PUBLISHED") {
+  const currentStatus = await ensureTestCompletion(test.id);
+
+  if (currentStatus !== "PUBLISHED" && currentStatus !== "LIVE") {
     return {
       success: false,
       message: "This test is not available to join.",
@@ -169,146 +172,6 @@ export async function createParticipantAction(input: {
       message: "An error occurred while registering for the test.",
     };
   }
-}
-
-export async function submitTestAction(testId: string) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
-
-  const participant = await prisma.participant.findUnique({
-    where: {
-      userId_testId: {
-        userId: session.user.id,
-        testId,
-      },
-    },
-
-    include: {
-      answers: {
-        include: {
-          question: {
-            include: {
-              options: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!participant) {
-    throw new Error("Participant not found");
-  }
-
-  if (
-    participant.status === "SUBMITTED" ||
-    participant.status === "AUTO_SUBMITTED"
-  ) {
-    throw new Error("Already submitted");
-  }
-
-
-let score = 0;
-
-for (const answer of participant.answers) {
-
-  const correctOption = answer.question.options.find(
-    (option) => option.isCorrect
-  );
-
-  if (!correctOption) continue;
-
-  let marksAwarded = 0;
-
-  if (answer.selectedOptionId === correctOption.id) {
-    marksAwarded = answer.question.marks;
-  } else if (answer.selectedOptionId) {
-    marksAwarded = -answer.question.negativeMarks;
-  }
-
-  score += marksAwarded;
-
-  await prisma.participantAnswer.update({
-    where: {
-      participantId_questionId: {
-        participantId: participant.id,
-        questionId: answer.question.id,
-      },
-    },
-    data: {
-      marksAwarded,
-    },
-  });
-}
-
-  await prisma.participant.update({
-    where: {
-      id: participant.id,
-    },
-
-    data: {
-      score,
-      status: "SUBMITTED",
-      submittedAt: new Date(),
-    },
-  });
-
-  return {
-    success: true,
-    score,
-  };
-}
-
-export async function saveAnswerAction(
-  questionId: string,
-  optionId: string,
-  testId: string,
-) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
-
-  const participant = await prisma.participant.findUnique({
-    where: {
-      userId_testId: {
-        userId: session.user.id,
-        testId,
-      },
-    },
-  });
-
-  if (!participant) {
-    throw new Error("Participant not found");
-  }
-
-  await prisma.participantAnswer.upsert({
-    where: {
-      participantId_questionId: {
-        participantId: participant.id,
-        questionId,
-      },
-    },
-
-    update: {
-      selectedOptionId: optionId,
-      answeredAt: new Date(),
-    },
-
-    create: {
-      participantId: participant.id,
-      questionId,
-      selectedOptionId: optionId,
-    },
-  });
-
-  return {
-    success: true,
-  };
 }
 
 export async function getJoinedTestsAction() {
