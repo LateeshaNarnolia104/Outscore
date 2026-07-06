@@ -201,7 +201,7 @@ model Participant {
   // Dynamic details
   details Json
 
-  warningCount Int @default(0)
+  warnings Int @default(0)
 
   status ParticipantStatus @default(NOT_STARTED)
 
@@ -214,7 +214,7 @@ model Participant {
   updatedAt DateTime @updatedAt
 
   answers  ParticipantAnswer[]
-  warnings WarningLog[]
+  warningLogs WarningLog[]
 
   @@unique([userId, testId])
   @@index([testId])
@@ -257,7 +257,9 @@ model WarningLog {
   participantId String
   participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 
-  warningType WarningType
+  type WarningType
+
+  message String?
 
   createdAt DateTime @default(now())
 
@@ -267,6 +269,7 @@ model WarningLog {
 
 enum WarningType {
   TAB_SWITCH
+  WINDOW_BLUR
   FULLSCREEN_EXIT
   COPY
   PASTE
