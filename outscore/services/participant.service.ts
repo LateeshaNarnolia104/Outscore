@@ -208,6 +208,12 @@ export async function getJoinedTests(userId: string) {
           totalQuestions: true,
           status: true,
           createdAt: true,
+
+          settings: {
+            select: {
+              showResult: true,
+            },
+          },
         },
       },
     },
@@ -222,6 +228,7 @@ export async function getJoinedTests(userId: string) {
     ],
   });
 }
+
 export async function getParticipantResult(testId: string, userId: string) {
   const participant = await prisma.participant.findUnique({
     where: {
@@ -232,7 +239,11 @@ export async function getParticipantResult(testId: string, userId: string) {
     },
 
     include: {
-      test: true,
+      test: {
+        include: {
+          settings: true,
+        },
+      },
 
       answers: {
         include: {

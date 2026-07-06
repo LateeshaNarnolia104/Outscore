@@ -16,13 +16,9 @@ export default async function JoinedTestsPage() {
     <main className="max-w-6xl mx-auto p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">
-            Joined Tests
-          </h1>
+          <h1 className="text-3xl font-bold">Joined Tests</h1>
 
-          <p className="text-neutral-500 mt-1">
-            Tests you've participated in.
-          </p>
+          <p className="text-neutral-500 mt-1">Tests you've participated in.</p>
         </div>
 
         <Link
@@ -35,9 +31,7 @@ export default async function JoinedTestsPage() {
 
       {tests.length === 0 ? (
         <div className="border rounded-xl p-10 text-center">
-          <h2 className="text-xl font-semibold">
-            No Joined Tests
-          </h2>
+          <h2 className="text-xl font-semibold">No Joined Tests</h2>
 
           <p className="text-neutral-500 mt-2">
             Join a test using an access code to see it here.
@@ -67,11 +61,8 @@ export default async function JoinedTestsPage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-
                 <div>
-                  <p className="text-sm text-neutral-500">
-                    Score
-                  </p>
+                  <p className="text-sm text-neutral-500">Score</p>
 
                   <p className="font-bold text-lg">
                     {participant.score} / {participant.test.totalMarks}
@@ -79,49 +70,45 @@ export default async function JoinedTestsPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm text-neutral-500">
-                    Questions
-                  </p>
+                  <p className="text-sm text-neutral-500">Questions</p>
 
-                  <p className="font-bold">
-                    {participant.test.totalQuestions}
-                  </p>
+                  <p className="font-bold">{participant.test.totalQuestions}</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-neutral-500">
-                    Access Code
-                  </p>
+                  <p className="text-sm text-neutral-500">Access Code</p>
 
-                  <p className="font-mono">
-                    {participant.test.accessCode}
-                  </p>
+                  <p className="font-mono">{participant.test.accessCode}</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-neutral-500">
-                    Joined
-                  </p>
+                  <p className="text-sm text-neutral-500">Joined</p>
 
-                  <p>
-                    {new Date(
-                      participant.createdAt
-                    ).toLocaleDateString()}
-                  </p>
+                  <p>{new Date(participant.createdAt).toLocaleDateString()}</p>
                 </div>
-
               </div>
 
               <div className="mt-6 flex flex-wrap gap-3">
                 {(participant.status === "SUBMITTED" ||
-                  participant.status === "AUTO_SUBMITTED") && (
-                  <Link
-                    href={`/dashboard/joined/${participant.test.id}`}
-                    className="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg text-sm font-medium transition hover:opacity-90"
-                  >
-                    View Result →
-                  </Link>
-                )}
+                  participant.status === "AUTO_SUBMITTED") &&
+                  participant.test.status === "COMPLETED" &&
+                  participant.test.settings?.showResult && (
+                    <Link
+                      href={`/dashboard/joined/${participant.test.id}`}
+                      className="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg text-sm font-medium transition hover:opacity-90"
+                    >
+                      View Result →
+                    </Link>
+                  )}
+
+                {(participant.status === "SUBMITTED" ||
+                  participant.status === "AUTO_SUBMITTED") &&
+                  (participant.test.status !== "COMPLETED" ||
+                    !participant.test.settings?.showResult) && (
+                    <span className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-600 dark:text-amber-400">
+                      Results Pending
+                    </span>
+                  )}
 
                 {participant.status !== "SUBMITTED" &&
                   participant.status !== "AUTO_SUBMITTED" &&

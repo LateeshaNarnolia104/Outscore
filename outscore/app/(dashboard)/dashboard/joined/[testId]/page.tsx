@@ -1,5 +1,6 @@
 import { getParticipantResultAction } from "@/app/(dashboard)/actions/participant.action";
 import { getParticipantRankAction } from "@/app/(dashboard)/actions/leaderboard.action";
+import Link from "next/link";
 
 export default async function ResultPage({
   params,
@@ -11,6 +12,34 @@ export default async function ResultPage({
   const { testId } = await params;
 
   const participant = await getParticipantResultAction(testId);
+
+  if (
+    participant.test.status !== "COMPLETED" ||
+    !participant.test.settings?.showResult
+  ) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-8">
+        <div className="max-w-xl w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 p-8 text-center">
+          <h1 className="text-3xl font-bold">Results Not Available Yet</h1>
+
+          <p className="mt-5 text-neutral-600 dark:text-neutral-300">
+            Your assessment has been submitted successfully.
+          </p>
+
+          <p className="mt-2 text-neutral-600 dark:text-neutral-300">
+            Results will become available once the assessment has ended.
+          </p>
+
+          <Link
+            href="/dashboard/joined"
+            className="mt-8 inline-flex rounded-xl bg-black px-6 py-3 text-white dark:bg-white dark:text-black"
+          >
+            Back to Joined Tests
+          </Link>
+        </div>
+      </main>
+    );
+  }
   const leaderboard = await getParticipantRankAction(
     participant.test.id,
     participant.id,
