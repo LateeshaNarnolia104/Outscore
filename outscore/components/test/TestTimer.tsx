@@ -67,14 +67,46 @@ export default function TestTimer({ endsAt, testId }: TestTimerProps) {
   const seconds = totalSeconds % 60;
 
   return (
-    <div className="rounded-xl border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30 px-4 py-3">
-      <p className="text-xs uppercase tracking-wider text-red-500 font-semibold">
+    <div
+      className="
+      rounded-2xl
+      border
+      border-neutral-800
+      bg-[#171717]
+      px-6
+      py-4
+      min-w-[180px]
+    "
+    >
+      <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">
         Time Remaining
       </p>
 
-      <p className="text-2xl font-bold text-red-600">
+      <p
+        className={`
+        mt-2
+        text-3xl
+        font-bold
+        tabular-nums
+        ${
+          totalSeconds <= 60
+            ? "text-red-500"
+            : totalSeconds <= 300
+              ? "text-orange-500/80"
+              : "text-white"
+        }
+      `}
+      >
         {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:
         {String(seconds).padStart(2, "0")}
+      </p>
+
+      <p className="mt-1 text-xs text-neutral-500">
+        {totalSeconds <= 60
+          ? "Less than 1 minute left"
+          : totalSeconds <= 300
+            ? "Final 5 minutes"
+            : "Timer is running"}
       </p>
     </div>
   );

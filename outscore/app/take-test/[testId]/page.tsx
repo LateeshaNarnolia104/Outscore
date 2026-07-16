@@ -37,21 +37,51 @@ export default async function TakeTestPage({ params }: TakeTestPageProps) {
   );
 
   return (
-    <main className="max-w-5xl mx-auto p-8">
-      <h1 className="text-3xl font-bold">{participant.test.title}</h1>
+    <main className="w-full min-h-screen mx-auto p-8">
+      <div
+  className="
+    sticky
+    top-0
+    z-50
+    mb-8
+    rounded-3xl
+    border
+    border-neutral-800
+    bg-[#111111]
+    px-8
+    py-6
+  "
+>
+  <div className="flex items-center justify-between mt-4 px-4 py-8 gap-8">
+
+    <div>
+
+      <h1 className="text-3xl font-bold text-white">
+        {participant.test.title}
+      </h1>
 
       <p className="mt-2 text-neutral-500">
-        Questions: {participant.test.questions.length}
+        {participant.test.questions.length} Questions
       </p>
 
-      <div className="mt-6">
-        <TestTimer endsAt={participant.test.endsAt!} testId={testId} />
-        <Proctoring testId={testId} />
-      </div>
+    </div>
 
-      <div className="mt-4">
-        <SubmitTestButton testId={testId} />
-      </div>
+    <div className="flex items-center gap-6">
+
+      <TestTimer
+        endsAt={participant.test.endsAt!}
+        testId={testId}
+      />
+
+      <SubmitTestButton testId={testId} />
+
+    </div>
+
+  </div>
+
+  <Proctoring testId={testId} />
+
+</div>
 
       <div className="mt-8">
         <AttemptTest

@@ -14,9 +14,10 @@ export default async function DashboardPage() {
   }
 
   const hostedTests = await getHostedTestsAction();
+  const liveTests = hostedTests.filter((test) => test.status === "LIVE").length;
 
   return (
-    <main className="w-full p-8 min-h-screen text-neutral-900 dark:text-neutral-100">
+    <main className="w-full p-8 min-h-screen bg-black  text-white dark:text-neutral-100">
       {/* Navbar */}
       <nav className="flex items-center justify-between pb-4 border-b border-neutral-200 dark:border-neutral-800">
         <h1 className="text-3xl font-extrabold tracking-tight">Outscore</h1>
@@ -25,45 +26,73 @@ export default async function DashboardPage() {
       </nav>
 
       {/* Welcome Section */}
-      <div className="mt-10">
-        <h2 className="text-5xl font-bold leading-tight">
-          Welcome,
-          {session.user.name}
-        </h2>
+      {/* Hero */}
 
-        <p className="mt-3 text-lg text-neutral-500 dark:text-neutral-400">
-          Manage your hosted assessments.
+      <section className="mt-10 rounded-3xl border border-orange-500/20 bg-gradient-to-br from-[#111111] to-[#1a1a1a] p-8 shadow-2xl shadow-orange-500/5">
+        <p className="text-orange-500 font-semibold tracking-widest uppercase text-sm">
+          Dashboard
         </p>
 
-        <div className="mt-6 flex gap-4">
+        <h2 className="mt-3 text-5xl font-black tracking-tight text-white">
+          Welcome back,
+          <span className="text-orange-500/80"> {session.user.name}</span>
+        </h2>
+
+        <p className="mt-4 text-neutral-400 max-w-2xl leading-7">
+          Create assessments, publish tests, monitor participants, and analyze
+          results—all from one place.
+        </p>
+
+        <div className="grid md:grid-cols-3 gap-5 mt-10">
+          <div className="rounded-2xl border border-neutral-800 bg-[#121212] p-6 hover:border-orange-500 transition">
+            <p className="text-neutral-400 text-sm">Hosted Tests</p>
+
+            <h3 className="text-4xl font-black mt-2 text-white">
+              {hostedTests.length}
+            </h3>
+          </div>
+
+          <div className="rounded-2xl border border-neutral-800 bg-[#121212] p-6 hover:border-orange-500 transition">
+            <p className="text-neutral-400 text-sm">Joined Tests</p>
+
+            <h3 className="text-4xl font-black mt-2 text-white">--</h3>
+          </div>
+
+          <div className="rounded-2xl border border-neutral-800 bg-[#121212] p-6 hover:border-orange-500 transition">
+            <p className="text-neutral-400 text-sm">Live Tests</p>
+
+            <h3 className="text-4xl font-black mt-2 text-orange-500/90">
+              {liveTests}
+            </h3>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-4 mt-10">
           <CreateTestDialog />
 
           <Link
             href="/join"
-            className="
-            px-6 py-3
-            rounded-2xl
-            bg-neutral-800
-            hover:bg-neutral-700
-            text-white
-            font-medium
-            transition
-          "
+            className="rounded-xl bg-orange-500/80 hover:bg-orange-600 px-6 py-3 font-semibold text-white transition"
           >
             Join Test
           </Link>
+
           <Link
             href="/dashboard/joined"
-            className="px-6 py-3
-            rounded-2xl
-            bg-neutral-800
-            hover:bg-neutral-700
-            text-white
-            font-medium
-            transition"
+            className="rounded-xl border border-neutral-700 px-6 py-3 font-semibold hover:border-orange-500/80 hover:text-orange-500 transition"
           >
             Joined Tests
           </Link>
+        </div>
+      </section>
+
+      <div className="mt-14 flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black text-white">Hosted Assessments</h2>
+
+          <p className="text-neutral-400 mt-1">
+            Manage and monitor all your hosted tests.
+          </p>
         </div>
       </div>
 

@@ -15,9 +15,11 @@ export default function Proctoring({ testId }: ProctoringProps) {
   const router = useRouter();
 
   const cooldown = useRef(false);
+
   const [started, setStarted] = useState(false);
 
   const [warnings, setWarnings] = useState(0);
+
   const [maxWarnings, setMaxWarnings] = useState(3);
 
   const [popup, setPopup] = useState<{
@@ -25,7 +27,10 @@ export default function Proctoring({ testId }: ProctoringProps) {
     message: string;
   } | null>(null);
 
-  async function reportViolation(type: WarningType, message: string) {
+  async function reportViolation(
+    type: WarningType,
+    message: string
+  ) {
     if (cooldown.current) return;
 
     cooldown.current = true;
@@ -34,24 +39,29 @@ export default function Proctoring({ testId }: ProctoringProps) {
       cooldown.current = false;
     }, 1500);
 
-    console.log("Reporting:", type);
-
-    const result = await recordWarningAction(testId, type, message);
-
-    console.log(result);
+    const result = await recordWarningAction(
+      testId,
+      type,
+      message
+    );
 
     if (!result.success) return;
 
-    const { warnings, maxWarnings, remainingWarnings, autoSubmit } = result;
+    const {
+      warnings,
+      maxWarnings,
+      remainingWarnings,
+      autoSubmit,
+    } = result;
 
     setWarnings(warnings);
     setMaxWarnings(maxWarnings);
 
     if (autoSubmit) {
       setPopup({
-        title: "Maximum Warnings Reached",
+        title: "Assessment Submitted",
         message:
-          "You have exceeded the maximum number of warnings.\n\nYour assessment is being submitted automatically.",
+          "Maximum warning limit reached.\n\nYour test has been submitted automatically.",
       });
 
       await submitTestAction(testId, true);
@@ -67,12 +77,13 @@ export default function Proctoring({ testId }: ProctoringProps) {
 
 Warnings: ${warnings}/${maxWarnings}
 
-Remaining warnings: ${remainingWarnings}`,
+Remaining: ${remainingWarnings}`,
     });
   }
 
   useEffect(() => {
     if (!started) return;
+
     let pageHidden = false;
 
     function visibilityHandler() {
@@ -83,99 +94,194 @@ Remaining warnings: ${remainingWarnings}`,
 
       pageHidden = true;
 
-      reportViolation("TAB_SWITCH", "Tab switching detected.");
+      reportViolation(
+        "TAB_SWITCH",
+        "Tab switching detected."
+      );
     }
 
     function blurHandler() {
       if (pageHidden) return;
 
-      reportViolation("WINDOW_BLUR", "Window focus lost.");
+      reportViolation(
+        "WINDOW_BLUR",
+        "Window focus lost."
+      );
     }
 
     function fullscreenHandler() {
       if (document.fullscreenElement) return;
 
-      reportViolation("FULLSCREEN_EXIT", "You exited fullscreen mode.");
+      reportViolation(
+        "FULLSCREEN_EXIT",
+        "Fullscreen exited."
+      );
     }
 
-    document.addEventListener("visibilitychange", visibilityHandler);
+    document.addEventListener(
+      "visibilitychange",
+      visibilityHandler
+    );
 
     window.addEventListener("blur", blurHandler);
 
-    document.addEventListener("fullscreenchange", fullscreenHandler);
+    document.addEventListener(
+      "fullscreenchange",
+      fullscreenHandler
+    );
 
     return () => {
-      document.removeEventListener("visibilitychange", visibilityHandler);
+      document.removeEventListener(
+        "visibilitychange",
+        visibilityHandler
+      );
 
       window.removeEventListener("blur", blurHandler);
 
-      document.removeEventListener("fullscreenchange", fullscreenHandler);
+      document.removeEventListener(
+        "fullscreenchange",
+        fullscreenHandler
+      );
     };
   }, [started]);
 
   if (!started) {
     return (
-      <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60">
-        <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-2xl dark:bg-neutral-900">
-          <h2 className="text-2xl font-bold">Assessment Instructions</h2>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-6">
 
-          <ul className="mt-6 space-y-3 text-neutral-600 dark:text-neutral-300">
-            <li>• This assessment must be taken in fullscreen mode.</li>
+        <div
+          className="
+            w-full
+            max-w-2xl
+            rounded-3xl
+            border
+            border-neutral-800
+            bg-[#111111]
+            p-8
+          "
+        >
+          <h1 className="text-3xl font-bold text-white">
+            Ready to Begin?
+          </h1>
 
-            <li>• Do not switch tabs or windows.</li>
+          <p className="mt-3 text-neutral-500">
+            Please read the instructions carefully before
+            starting your assessment.
+          </p>
 
-            <li>• Exiting fullscreen counts as a warning.</li>
+          <div
+            className="
+              mt-8
+              rounded-2xl
+              border
+              border-neutral-800
+              bg-neutral-900
+              p-6
+            "
+          >
+            <ul className="space-y-4 text-neutral-300">
 
-            <li>• Multiple warnings will automatically submit your test.</li>
+              <li>• Stay in fullscreen during the assessment.</li>
 
-            <li>• Ensure a stable internet connection before continuing.</li>
-          </ul>
+              <li>• Do not switch tabs or applications.</li>
+
+              <li>• Leaving fullscreen counts as a warning.</li>
+
+              <li>
+                • Multiple warnings will automatically
+                submit your assessment.
+              </li>
+
+              <li>
+                • Make sure your internet connection is
+                stable.
+              </li>
+
+            </ul>
+          </div>
 
           <button
-            className="mt-8 w-full rounded-xl bg-black py-3 font-semibold text-white dark:bg-white dark:text-black"
             onClick={async () => {
               try {
                 await document.documentElement.requestFullscreen();
 
                 setStarted(true);
               } catch {
-                alert("Please allow fullscreen to start the assessment.");
+                setPopup({
+                  title: "Fullscreen Required",
+                  message:
+                    "Please allow fullscreen mode before starting the assessment.",
+                });
               }
             }}
+            className="
+              mt-8
+              w-full
+              rounded-2xl
+              bg-orange-500/80
+              py-4
+              font-semibold
+              text-black
+              hover:bg-orange-500
+              transition-colors
+            "
           >
             Start Assessment
           </button>
         </div>
+
       </div>
     );
   }
 
   return (
     <>
-      {/* Warning Counter */}
-
-      <div className="fixed top-5 right-5 z-50 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 shadow-lg backdrop-blur">
-        <p className="text-xs font-semibold uppercase tracking-wide text-red-500">
+      <div
+        className="
+          fixed
+          right-6
+          top-6
+          z-50
+          rounded-2xl
+          border
+          border-red-500/20
+          bg-[#111111]
+          px-5
+          py-4
+        "
+      >
+        <p className="text-xs uppercase tracking-wider text-red-400">
           Warnings
         </p>
 
-        <p className="text-2xl font-bold text-red-500">
+        <p className="mt-1 text-2xl font-bold text-red-400">
           {warnings} / {maxWarnings}
         </p>
       </div>
 
-      {/* Popup */}
-
       {popup && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-105 rounded-2xl bg-white p-6 shadow-2xl dark:bg-neutral-900">
-            <h2 className="text-xl font-bold">{popup.title}</h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6">
 
-            <p className="mt-4 whitespace-pre-line text-neutral-600 dark:text-neutral-300">
+          <div
+            className="
+              w-full
+              max-w-md
+              rounded-3xl
+              border
+              border-neutral-800
+              bg-[#111111]
+              p-7
+            "
+          >
+            <h2 className="text-2xl font-bold text-white">
+              {popup.title}
+            </h2>
+
+            <p className="mt-5 whitespace-pre-line text-neutral-400">
               {popup.message}
             </p>
 
-            {!popup.title.includes("Maximum") && (
+            {!popup.title.includes("Assessment Submitted") && (
               <button
                 onClick={async () => {
                   if (!document.fullscreenElement) {
@@ -186,12 +292,22 @@ Remaining warnings: ${remainingWarnings}`,
 
                   setPopup(null);
                 }}
-                className="mt-6 w-full rounded-lg bg-black px-4 py-2 text-white transition hover:opacity-90 dark:bg-white dark:text-black"
+                className="
+                  mt-8
+                  w-full
+                  rounded-2xl
+                  bg-orange-500/80
+                  py-3
+                  font-semibold
+                  text-black
+                  hover:bg-orange-500
+                "
               >
-                Continue Test
+                Continue Assessment
               </button>
             )}
           </div>
+
         </div>
       )}
     </>

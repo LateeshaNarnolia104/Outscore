@@ -3,47 +3,41 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String  @id @default(cuid())
-
-  name         String?
-  email        String? @unique
-  emailVerified DateTime?
-  image        String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  accounts Account[]
-  sessions Session[]
-
-  tests          Test[]
+  id             String        @id @default(cuid())
+  name           String?
+  email          String?       @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  image          String?
+  emailVerified  DateTime?
+  accounts       Account[]
+  sessions       Session[]
   participations Participant[]
+  tests          Test[]
 
   @@index([email])
   @@map("users")
 }
 
 model Account {
-  id                String @id @default(cuid())
+  id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -53,50 +47,146 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
   identifier String
-  token      String @unique
+  token      String   @unique
   expires    DateTime
 
   @@unique([identifier, token])
 }
 
 model Test {
-  id String @id @default(cuid())
-
-  hostId String
-  host   User   @relation(fields: [hostId], references: [id], onDelete: Cascade)
-
-  title       String
-  description String?
-
-  accessCode String @unique
-
-  duration Int // in minutes
-
-  status TestStatus @default(DRAFT)
-
-  totalMarks     Int @default(0)
-  totalQuestions Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  startedAt DateTime?
-  endsAt DateTime?
-  endedAt DateTime?
-
-  // Relations
-  settings     TestSetting?
-  questions    Question[]
-  participants Participant[]
+  id             String        @id @default(cuid())
+  hostId         String
+  title          String
+  description    String?
+  accessCode     String        @unique
+  duration       Int
+  status         TestStatus    @default(DRAFT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  totalMarks     Int           @default(0)
+  totalQuestions Int           @default(0)
+  endedAt        DateTime?
+  endsAt         DateTime?
+  startedAt      DateTime?
+  participants   Participant[]
+  questions      Question[]
+  settings       TestSetting?
+  host           User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
 
   @@index([hostId])
   @@map("tests")
+}
+
+model TestSetting {
+  id                  String   @id @default(cuid())
+  testId              String   @unique
+  cameraRequired      Boolean  @default(false)
+  fullscreenRequired  Boolean  @default(false)
+  maxWarnings         Int      @default(3)
+  shuffleQuestions    Boolean  @default(false)
+  shuffleOptions      Boolean  @default(false)
+  autoSubmitOnWarning Boolean  @default(true)
+  showResult          Boolean  @default(true)
+  participantFields   Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  copyAllowed         Boolean  @default(false)
+  pasteAllowed        Boolean  @default(false)
+  tabSwitchDetection  Boolean  @default(true)
+  test                Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@map("test_settings")
+}
+
+model Question {
+  id            String              @id @default(cuid())
+  testId        String
+  questionText  String
+  marks         Int                 @default(1)
+  negativeMarks Float               @default(0)
+  position      Int
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  explanation   String?
+  type          QuestionType        @default(MCQ)
+  options       Option[]
+  answers       ParticipantAnswer[]
+  test          Test                @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, position])
+  @@index([testId])
+  @@map("questions")
+}
+
+model Option {
+  id         String              @id @default(cuid())
+  questionId String
+  optionText String
+  isCorrect  Boolean             @default(false)
+  createdAt  DateTime            @default(now())
+  position   Int
+  question   Question            @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedBy ParticipantAnswer[]
+
+  @@index([questionId])
+  @@map("options")
+}
+
+model Participant {
+  id          String              @id @default(cuid())
+  userId      String
+  testId      String
+  details     Json
+  status      ParticipantStatus   @default(NOT_STARTED)
+  startedAt   DateTime?
+  submittedAt DateTime?
+  score       Float               @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  warnings    Int                 @default(0)
+  answers     ParticipantAnswer[]
+  test        Test                @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  warningLogs WarningLog[]
+
+  @@unique([userId, testId])
+  @@index([testId])
+  @@index([userId])
+  @@map("participants")
+}
+
+model ParticipantAnswer {
+  id               String      @id @default(cuid())
+  participantId    String
+  questionId       String
+  selectedOptionId String?
+  marksAwarded     Float       @default(0)
+  answeredAt       DateTime    @default(now())
+  participant      Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  question         Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption   Option?     @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([participantId, questionId])
+  @@index([participantId])
+  @@index([questionId])
+  @@map("participant_answers")
+}
+
+model WarningLog {
+  id            String      @id @default(cuid())
+  participantId String
+  createdAt     DateTime    @default(now())
+  message       String?
+  type          WarningType
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([participantId])
+  @@map("warning_logs")
 }
 
 enum TestStatus {
@@ -106,120 +196,8 @@ enum TestStatus {
   COMPLETED
 }
 
-model TestSetting {
-  id String @id @default(cuid())
-
-  testId String @unique
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
-
-  cameraRequired     Boolean @default(false)
-  fullscreenRequired Boolean @default(false)
-  maxWarnings        Int     @default(3)
-
-  copyAllowed        Boolean @default(false)
-  pasteAllowed       Boolean @default(false)
-  tabSwitchDetection Boolean @default(true)
-
-  shuffleQuestions Boolean @default(false)
-  shuffleOptions   Boolean @default(false)
-
-  autoSubmitOnWarning Boolean @default(true)
-  showResult          Boolean @default(true)
-
-  // Dynamic participant form
-  participantFields Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("test_settings")
-}
-
-model Question {
-  id String @id @default(cuid())
-
-  testId String
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
-
-  type QuestionType @default(MCQ)
-
-  questionText String @db.Text
-
-  marks         Int   @default(1)
-  negativeMarks Float @default(0)
-
-  position Int
-
-  explanation String? @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  options Option[]
-  answers ParticipantAnswer[]
-
-  @@index([testId])
-  @@unique([testId, position])
-  @@map("questions")
-}
-
 enum QuestionType {
   MCQ
-}
-
-model Option {
-  id String @id @default(cuid())
-
-  questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  optionText String @db.Text
-
-  isCorrect Boolean @default(false)
-
-  position Int
-
-  createdAt DateTime @default(now())
-
-  // Relations
-  selectedBy ParticipantAnswer[]
-
-  @@index([questionId])
-  @@map("options")
-}
-
-model Participant {
-  id String @id @default(cuid())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  testId String
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
-
-  // Dynamic details
-  details Json
-
-  warnings Int @default(0)
-
-  status ParticipantStatus @default(NOT_STARTED)
-
-  startedAt   DateTime?
-  submittedAt DateTime?
-
-  score Float @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  answers  ParticipantAnswer[]
-  warningLogs WarningLog[]
-
-  @@unique([userId, testId])
-  @@index([testId])
-  @@index([userId])
-  @@map("participants")
 }
 
 enum ParticipantStatus {
@@ -229,48 +207,10 @@ enum ParticipantStatus {
   AUTO_SUBMITTED
 }
 
-model ParticipantAnswer {
-  id String @id @default(cuid())
-
-  participantId String
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-
-  questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  selectedOptionId String?
-  selectedOption   Option? @relation(fields: [selectedOptionId], references: [id])
-
-  marksAwarded Float @default(0)
-
-  answeredAt DateTime @default(now())
-
-  @@unique([participantId, questionId])
-  @@index([participantId])
-  @@index([questionId])
-  @@map("participant_answers")
-}
-
-model WarningLog {
-  id String @id @default(cuid())
-
-  participantId String
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-
-  type WarningType
-
-  message String?
-
-  createdAt DateTime @default(now())
-
-  @@index([participantId])
-  @@map("warning_logs")
-}
-
 enum WarningType {
   TAB_SWITCH
-  WINDOW_BLUR
   FULLSCREEN_EXIT
   COPY
   PASTE
+  WINDOW_BLUR
 }

@@ -26,7 +26,7 @@ export default function DeleteQuestionButton({
   return (
     <button
       onClick={handleDelete}
-      className="bg-red-500 text-white px-3 py-1 rounded"
+      className="bg-red-500/90 text-white px-3 py-1 rounded"
     >
       Delete
     </button>
