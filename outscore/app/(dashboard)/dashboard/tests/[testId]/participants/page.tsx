@@ -40,7 +40,7 @@ export default async function ParticipantsPage({
     : [];
 
   return (
-    <main className="max-w-6xl mx-auto p-8 text-neutral-900 dark:text-neutral-100">
+    <main className="max-w-6xl mx-auto p-8 bg-black text-white  dark:text-neutral-100">
       <Link
         href="/dashboard"
         className="inline-flex items-center mb-6 text-sm text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white transition"
@@ -90,7 +90,7 @@ export default async function ParticipantsPage({
       </div>
 
       {participants.length === 0 ? (
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-16 text-center bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 shadow-sm">
+        <div className="rounded-2xl border bg-black  border-neutral-200 dark:border-neutral-800 p-16 text-center text-white dark:bg-neutral-900 dark:text-neutral-400 shadow-sm">
           <p className="text-lg font-medium text-neutral-800 dark:text-neutral-200">
             No participants yet
           </p>
@@ -103,10 +103,10 @@ export default async function ParticipantsPage({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
+        <div className="overflow-x-auto bg-black rounded-2xl border border-neutral-200 dark:border-neutral-800 text-white dark:bg-neutral-900 shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/40 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <tr className="border-b border-neutral-200 bg-black text-white dark:border-neutral-800  dark:bg-neutral-800/40 text-xs font-bold uppercase tracking-wider  dark:text-neutral-400">
                 <th className="py-4 px-6 w-16">Rank</th>
                 {dynamicFields.map((field) => (
                   <th key={field.id} className="py-4 px-6">
@@ -120,7 +120,7 @@ export default async function ParticipantsPage({
                 <th className="py-4 px-6 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 text-sm text-neutral-900 dark:text-neutral-100">
+            <tbody className="divide-y bg-black text-white divide-neutral-200 dark:divide-neutral-800 text-sm  dark:text-neutral-100">
               {participants.map((participant, index) => {
                 const details =
                   (participant.details as Record<string, any>) || {};
@@ -171,7 +171,7 @@ export default async function ParticipantsPage({
                         ? `${participant.score}/${test.totalMarks}`
                         : "-"}
                     </td>
-                    <td className="py-4 px-6 text-neutral-950 dark:text-white">
+                    <td className="py-4 px-6 bg-black text-white dark:text-white">
                       {(() => {
                         if (
                           participant.status !== "SUBMITTED" &&

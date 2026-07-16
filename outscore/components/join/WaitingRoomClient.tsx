@@ -16,77 +16,159 @@ export default function WaitingRoomClient({
   participantName,
 }: WaitingRoomClientProps) {
   const router = useRouter();
-  const [status, setStatus] = useState<string>("PUBLISHED");
+
+  const [status, setStatus] = useState("PUBLISHED");
 
   useEffect(() => {
-    // Poll test status every 3 seconds
     const interval = setInterval(async () => {
       try {
         const currentStatus = await getTestStatusAction(testId);
+
         if (currentStatus) {
           setStatus(currentStatus);
+
           if (currentStatus === "LIVE") {
             clearInterval(interval);
             router.push(`/take-test/${testId}`);
           }
         }
       } catch (error) {
-        console.error("Error polling test status:", error);
+        console.error(error);
       }
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [testId, router]);
+  }, [router, testId]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-950 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-8 shadow-2xl text-center space-y-6">
-        
-        {/* Pulse Indicator */}
+    <main className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-6 py-10">
+      <div
+        className="
+          w-full
+          max-w-xl
+          rounded-3xl
+          border
+          border-neutral-800
+          bg-[#111111]
+          p-10
+          shadow-2xl
+          text-center
+        "
+      >
+        {/* Animated Icon */}
+
         <div className="flex justify-center">
-          <div className="relative flex h-16 w-16 items-center justify-center">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-20"></span>
-            <span className="relative inline-flex rounded-full h-10 w-10 bg-pink-500 shadow-lg flex items-center justify-center text-white font-bold">
+          <div className="relative flex h-20 w-20 items-center justify-center">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-500/20"></span>
+
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/10 border border-orange-500/30 text-3xl">
               ⏳
-            </span>
+            </div>
           </div>
         </div>
 
-        {/* Header Success Message */}
-        <div className="space-y-1">
-          <p className="text-sm font-bold text-green-400 tracking-wide uppercase">
-            ✔ Registration Complete
+        {/* Header */}
+
+        <div className="mt-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-orange-500">
+            Registration Successful
           </p>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">
+
+          <h1 className="mt-4 text-4xl font-bold text-white">
             {testTitle}
           </h1>
-          <p className="text-neutral-400 text-sm">
-            Candidate: <span className="font-semibold text-neutral-200">{participantName}</span>
+
+          <p className="mt-3 text-neutral-400">
+            Your registration has been completed successfully.
           </p>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-neutral-800"></div>
+        {/* Candidate */}
 
-        {/* Status */}
-        <div className="space-y-2">
-          <p className="text-neutral-300 font-medium text-base">
-            You are in the waiting room
+        <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900 p-5">
+          <p className="text-sm text-neutral-500">
+            Participant
           </p>
-          <div className="inline-flex items-center px-4 py-2 rounded-xl bg-neutral-800 text-white font-bold text-xs uppercase tracking-widest border border-neutral-700 animate-pulse">
-            WAITING FOR HOST TO START TEST
+
+          <p className="mt-2 text-xl font-semibold text-white">
+            {participantName}
+          </p>
+        </div>
+
+        {/* Waiting Status */}
+
+        <div className="mt-8">
+          <div
+            className="
+              inline-flex
+              rounded-full
+              bg-orange-500/10
+              px-5
+              py-2
+              text-sm
+              font-semibold
+              text-orange-400
+            "
+          >
+            Waiting for Host
           </div>
-          <p className="text-neutral-400 text-xs">
-            Waiting for host to start the test...
+
+          <p className="mt-5 text-neutral-300">
+            The host hasn't started the assessment yet.
+          </p>
+
+          <p className="mt-2 text-sm text-neutral-500">
+            Current Status :
+            <span className="ml-2 font-semibold text-orange-400">
+              {status}
+            </span>
           </p>
         </div>
 
-        {/* Warnings */}
-        <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-3.5 text-xs text-red-300 font-medium">
-          ⚠️ Please do not close this tab or navigate away.
+        {/* Loading Animation */}
+
+        <div className="mt-8 flex justify-center gap-2">
+          <div className="h-2 w-2 animate-bounce rounded-full bg-orange-500"></div>
+
+          <div
+            className="h-2 w-2 animate-bounce rounded-full bg-orange-500"
+            style={{ animationDelay: "0.2s" }}
+          ></div>
+
+          <div
+            className="h-2 w-2 animate-bounce rounded-full bg-orange-500"
+            style={{ animationDelay: "0.4s" }}
+          ></div>
         </div>
 
+        {/* Instructions */}
+
+        <div
+          className="
+            mt-10
+            rounded-2xl
+            border
+            border-red-500/20
+            bg-red-500/10
+            p-6
+            text-left
+          "
+        >
+          <p className="font-semibold text-red-400">
+            Important Instructions
+          </p>
+
+          <ul className="mt-4 space-y-3 text-sm text-neutral-300">
+            <li>• Keep this tab open until the assessment begins.</li>
+
+            <li>• Do not refresh the page.</li>
+
+            <li>• You'll automatically enter the assessment once the host starts the test.</li>
+
+            <li>• Ensure you have a stable internet connection.</li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -4,7 +4,10 @@ import { FormEvent, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import { joinTestAction, createParticipantAction } from "@/app/(dashboard)/actions/participant.action";
+import {
+  joinTestAction,
+  createParticipantAction,
+} from "@/app/(dashboard)/actions/participant.action";
 import ParticipantDynamicForm from "./ParticipantDynamicForm";
 import { ParticipantField } from "@/validators/participant-fields";
 
@@ -84,67 +87,68 @@ export default function JoinTestForm() {
   }
 
   return (
-    <div className="w-full">
+    <div className="mx-auto w-full max-w-3xl">
       {step === "CODE" && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-sm"
+          className="
+mx-auto
+w-full
+max-w-md
+rounded-3xl
+border
+border-neutral-800
+bg-[#111111]
+p-8
+"
         >
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-            Join Test
-          </h1>
+          <h1 className="text-4xl font-bold text-white">Join Test</h1>
 
-          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-            Enter the access code shared by the host.
+          <p className="mt-3 text-neutral-400">
+            Enter the 6-character access code shared by your instructor.
           </p>
 
           <input
             value={accessCode}
-            onChange={(e) =>
-              setAccessCode(e.target.value.toUpperCase())
-            }
+            onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
             maxLength={6}
             placeholder="ABC123"
             className="
-              mt-6
-              w-full
-              rounded-xl
-              border
-              border-neutral-300
-              dark:border-neutral-700
-              bg-transparent
-              p-3
-              text-center
-              text-lg
-              font-semibold
-              uppercase
-              tracking-widest
-              outline-none
-              focus:ring-2
-              focus:ring-black
-              dark:focus:ring-white
-            "
+mt-8
+w-full
+rounded-2xl
+border
+border-neutral-700
+bg-neutral-900
+px-4
+py-4
+text-center
+text-2xl
+font-bold
+tracking-[0.5rem]
+uppercase
+text-white
+placeholder:text-neutral-600
+focus:border-orange-500/40
+focus:outline-none
+"
           />
 
           <button
             type="submit"
             disabled={isPending}
             className="
-              mt-6
-              w-full
-              rounded-xl
-              bg-black
-              py-3
-              font-medium
-              text-white
-              transition
-              hover:opacity-90
-              disabled:cursor-not-allowed
-              disabled:opacity-50
-              dark:bg-white
-              dark:text-black
-              cursor-pointer
-            "
+mt-8
+w-full
+rounded-2xl
+bg-orange-500/80
+py-4
+font-semibold
+text-black
+hover:bg-orange-500
+disabled:opacity-50
+cursor-pointer
+"
           >
             {isPending ? "Checking..." : "Join Test"}
           </button>
@@ -162,34 +166,37 @@ export default function JoinTestForm() {
           </p>
 
           <div className="mt-8 grid grid-cols-3 gap-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 p-5">
-            <div>
-              <p className="text-xs uppercase text-neutral-500">
-                Duration
-              </p>
+            <div
+              className="rounded-2xl
+                          border
+                        border-neutral-800
+                        bg-neutral-900 p-5"
+            >
+              <p className="text-xs uppercase text-neutral-500">Duration</p>
 
-              <p className="mt-1 text-lg font-semibold">
-                {test.duration} mins
-              </p>
+              <p className="mt-1 text-lg font-semibold">{test.duration} mins</p>
             </div>
 
-            <div>
-              <p className="text-xs uppercase text-neutral-500">
-                Questions
-              </p>
+            <div className="rounded-2xl
+border
+border-neutral-800
+bg-neutral-900
+p-5">
+              <p className="text-xs uppercase text-neutral-500">Questions</p>
 
               <p className="mt-1 text-lg font-semibold">
                 {test.totalQuestions}
               </p>
             </div>
 
-            <div>
-              <p className="text-xs uppercase text-neutral-500">
-                Marks
-              </p>
+            <div className="rounded-2xl
+border
+border-neutral-800
+bg-neutral-900
+p-5">
+              <p className="text-xs uppercase text-neutral-500">Marks</p>
 
-              <p className="mt-1 text-lg font-semibold">
-                {test.totalMarks}
-              </p>
+              <p className="mt-1 text-lg font-semibold">{test.totalMarks}</p>
             </div>
           </div>
 
@@ -201,7 +208,6 @@ export default function JoinTestForm() {
                 flex-1
                 rounded-xl
                 border
-                border-neutral-300
                 dark:border-neutral-700
                 py-3
                 font-medium
@@ -209,6 +215,9 @@ export default function JoinTestForm() {
                 hover:bg-neutral-100
                 dark:hover:bg-neutral-800
                 cursor-pointer
+                border-neutral-700
+hover:border-orange-500/40
+hover:text-orange-500/80
               "
             >
               Back
@@ -220,15 +229,16 @@ export default function JoinTestForm() {
               className="
                 flex-1
                 rounded-xl
-                bg-black
                 py-3
                 font-medium
-                text-white
                 transition
                 hover:opacity-90
                 dark:bg-white
                 dark:text-black
                 cursor-pointer
+                bg-orange-500/80
+hover:bg-orange-500
+text-black
               "
             >
               Continue
@@ -238,19 +248,20 @@ export default function JoinTestForm() {
       )}
 
       {step === "FORM" && test && (
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 shadow-sm">
+        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-[#111111] dark:bg-neutral-900 p-8 shadow-sm">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-            Registration
+            Registration Details
           </h1>
 
           <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-            Please fill in your details to start the assessment.
+            Please fill in the following details before starting the test.
           </p>
 
           <ParticipantDynamicForm
             fields={
               Array.isArray(test.settings?.participantFields)
-                ? (test.settings.participantFields as unknown as ParticipantField[])
+                ? (test.settings
+                    .participantFields as unknown as ParticipantField[])
                 : []
             }
             onSubmit={handleFormSubmit}

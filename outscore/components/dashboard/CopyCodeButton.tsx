@@ -18,7 +18,21 @@ export default function CopyCodeButton({
   return (
     <button
       onClick={handleCopy}
-      className="rounded-lg border border-neutral-300 dark:border-neutral-700 px-4 py-2 text-sm font-medium transition hover:bg-neutral-100 dark:hover:bg-neutral-800"
+      className="rounded-xl
+border
+border-neutral-700
+bg-[#181818]
+px-5
+py-3
+text-sm
+font-semibold
+text-neutral-200
+transition-all
+duration-300
+hover:border-orange-500
+hover:text-orange-400
+hover:bg-[#202020]
+"
     >
       Copy Code
     </button>

@@ -62,7 +62,7 @@ export default function EditQuestionButton({
     return (
       <button
         onClick={() => setEditing(true)}
-        className="bg-blue-500 text-white px-3 py-1 rounded"
+        className="bg-orange-600 text-white px-3 py-1 rounded"
       >
         Edit
       </button>
@@ -126,7 +126,7 @@ export default function EditQuestionButton({
 
       <button
         onClick={handleSave}
-        className="bg-green-600 text-white px-4 py-2 rounded"
+        className="bg-orange-700 text-white px-4 py-2 rounded"
       >
         Save
       </button>

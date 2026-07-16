@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+
 import { getTestForHost } from "@/services/test.service";
 import ParticipantFieldBuilder from "@/components/participant-form/ParticipantFieldBuilder";
 import { ParticipantField } from "@/validators/participant-fields";
@@ -24,53 +25,72 @@ export default async function ParticipantFormPage({
 
   if (!test) {
     return (
-      <div className="p-8 text-center text-red-500 font-medium">
-        Test not found or unauthorized.
+      <div className="p-8 text-center text-red-500">
+        Test not found.
       </div>
     );
   }
 
   const isEditable = test.status === "DRAFT";
 
-  // Parse existing fields
   const initialFields = Array.isArray(test.settings?.participantFields)
     ? (test.settings.participantFields as unknown as ParticipantField[])
     : undefined;
 
   return (
-    <main className="max-w-3xl mx-auto p-8 text-neutral-900 dark:text-neutral-100">
+    <main className="px-8 py-8">
+
+      {/* Back Button */}
       <Link
         href="/dashboard"
-        className="inline-flex items-center mb-6 text-sm text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white transition"
+        className="
+          inline-flex
+          items-center
+          text-sm
+          font-medium
+          text-neutral-400
+          hover:text-orange-500/80
+          transition-colors
+        "
       >
         ← Back to Dashboard
       </Link>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight">
-          Configure Registration Form
-        </h1>
-        <p className="text-neutral-500 mt-2">
-          Design the form that participants must fill out before starting the
-          test: <strong>{test.title}</strong>
-        </p>
-      </div>
+      {/* Page Content */}
+      <div className="max-w-4xl mx-auto pt-6">
 
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-8 shadow-sm">
+        <div className="mb-4">
+          <h1 className="text-4xl font-bold text-white">
+            Participant Registration Form
+          </h1>
+
+          <p className="mt-2 text-neutral-500">
+            Configure the information participants must provide before joining
+            <span className="text-orange-500/80 font-medium">
+              {" "}
+              {test.title}
+            </span>
+          </p>
+        </div>
+
         {!isEditable && (
-          <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-600 dark:text-amber-400">
-            🔒 The participant registration form is locked because this test has
-            already been published.
+          <div className="mb-4 rounded-2xl border border-orange-500/20 bg-orange-500/10 p-3 text-orange-500/80">
+            This registration form is locked because the test has already been
+            published.
           </div>
         )}
 
-        {isEditable && (
-          <ParticipantFieldBuilder
-            testId={testId}
-            initialFields={initialFields}
-          />
-        )}
+        <div className="rounded-3xl border border-neutral-800 bg-[#111111] p-4">
+          {isEditable && (
+            <ParticipantFieldBuilder
+              testId={testId}
+              initialFields={initialFields}
+            />
+          )}
+        </div>
+
       </div>
+
     </main>
   );
 }

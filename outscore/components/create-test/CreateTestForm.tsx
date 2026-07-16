@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-
 import { createTestAction } from "@/app/(dashboard)/actions/test.action";
+import { toast } from "sonner";
+
 
 type CreateTestFormProps = {
   onSuccess: () => void;
@@ -30,60 +31,118 @@ export default function CreateTestForm({
       } catch (error) {
         console.error(error);
         alert("Failed to create test.");
+        // toast.success("Failed to create test");
       }
     });
   };
 
   return (
-    <div className="space-y-5 text-neutral-900 dark:text-neutral-100">
+    <div className="space-y-7">
+      {/* Title */}
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-          Title
+        <label className="mb-2 block text-sm font-medium text-neutral-300">
+          Test Title
         </label>
 
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 p-2.5 text-sm focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none transition-all duration-200"
-          placeholder="Weekly DSA Test"
+          placeholder="e.g. DSA Mid Semester"
+          className="
+            w-full
+            rounded-2xl
+            border
+            border-neutral-700
+            bg-[#171717]
+            px-4
+            py-3
+            text-white
+            placeholder:text-neutral-500
+            focus:border-orange-500/40
+            focus:outline-none
+          "
         />
       </div>
 
+      {/* Description */}
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+        <label className="mb-2 block text-sm font-medium text-neutral-300">
           Description
         </label>
 
         <textarea
+          rows={4}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 p-2.5 text-sm focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none transition-all duration-200"
-          rows={4}
           placeholder="Optional description..."
+          className="
+            w-full
+            resize-none
+            rounded-2xl
+            border
+            border-neutral-700
+            bg-[#171717]
+            px-4
+            py-3
+            text-white
+            placeholder:text-neutral-500
+            focus:border-orange-500/40
+            focus:outline-none
+          "
         />
       </div>
 
+      {/* Duration */}
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-          Duration (minutes)
+        <label className="mb-2 block text-sm font-medium text-neutral-300">
+          Duration
         </label>
 
-        <input
-          type="number"
-          value={duration}
-          onChange={(e) =>
-            setDuration(Number(e.target.value))
-          }
-          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 p-2.5 text-sm focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none transition-all duration-200"
-        />
+        <div className="relative">
+          <input
+            type="number"
+            min={1}
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+            className="
+              w-full
+              rounded-2xl
+              border
+              border-neutral-700
+              bg-[#171717]
+              px-4
+              py-3
+              pr-20
+              text-white
+              focus:border-orange-500/40
+              focus:outline-none
+            "
+          />
+
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
+            mins
+          </span>
+        </div>
       </div>
 
-      <div className="flex justify-end pt-2">
+      {/* Footer */}
+      <div className="flex justify-end gap-3 border-t border-neutral-800 pt-6">
         <button
           type="button"
-          disabled={isPending}
           onClick={handleSubmit}
-          className="rounded-lg bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 px-5 py-2.5 font-semibold text-sm disabled:opacity-50 transition-all duration-200 cursor-pointer"
+          disabled={isPending}
+          className="
+            rounded-xl
+            bg-orange-500/80
+            hover:bg-orange-500
+            px-6
+            py-3
+            font-semibold
+            text-black
+            transition-colors
+            disabled:opacity-50
+            cursor-pointer
+          "
         >
           {isPending ? "Creating..." : "Create Test"}
         </button>

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function getParticipantDetails(
   participantId: string,
-  hostId: string
+  hostId: string,
 ) {
   const participant = await prisma.participant.findUnique({
     where: {
@@ -17,7 +17,19 @@ export async function getParticipantDetails(
         },
       },
 
-      test: true,
+      test: {
+        select: {
+          title: true,
+          totalMarks: true,
+          totalQuestions: true,
+          hostId: true,
+        },
+      },
+      warningLogs: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
 
       answers: {
         include: {
